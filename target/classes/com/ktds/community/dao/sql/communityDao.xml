@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CommunityDAO"> <!-- 인터페이스 이름 : CommunityDAO -->
+	<!-- 인터페이스에 있는 메소드 이름 :id -->
+	<!-- resultType : 쿼리결과의 결과물들 위치 -->
+
+	<!-- resultMap -->
+	<resultMap type="CommunityVO" id="CommunityVOMap">
+		<id column="ID" property="id" /><!-- PK -->
+		<result column="TITLE" property="title" />
+		<result column="CONTENTS" property="contents" />
+		<result column="ACCOUNT" property="account" />
+		<result column="WRITE_DATE" property="writeDate" />
+		<result column="VIEW_COUNT" property="viewCount" />
+		<result column="RECOMMEND_COUNT" property="recommendCount" />
+		<result column="REQUEST_IP" property="requestIP" />
+		<result column="DISPLAY_FILE_NAME" property="displayFilename" />
+		<!-- 결과를 다른 객체에 할당 -->       <!-- 객체의 클래스가 뭐냐 -->
+		<association property="memberVO" javaType="MemberVO">
+			<id column="M_ID" property="account" />
+			<result column="EMAIL" property="email" />
+			<result column="NICKNAME" property="nickname" />
+			<result column="REGIST_DATE" property="registDate" />
+		</association>
+	</resultMap>
+
+	<select id="selectAll" resultMap="CommunityVOMap">
+		SELECT C.ID
+		, C.TITLE
+		,
+		C.CONTENTS
+		, C.ACCOUNT
+		, TO_CHAR(C.WRITE_DATE,'YYYY-MM-DD HH24:MI:SS')
+		WRITE_DATE
+		, C.VIEW_COUNT
+		, C.RECOMMEND_COUNT
+		, C.REQUEST_IP
+		,
+		C.DISPLAY_FILE_NAME
+		, M.ACCOUNT M_ID
+		, M.EMAIL
+		, M.NICKNAME
+		,
+		M.REGIST_DATE
+		FROM COMMUNITY C
+		, MEMBER M
+		WHERE C.ACCOUNT = M.ACCOUNT(+)
+		ORDER BY C.ID DESC
+	</select>
+	<insert id="insertCommunity" parameterType="CommunityVO">
+		INSERT INTO COMMUNITY
+		(
+		ID
+		, TITLE
+		, CONTENTS
+		, ACCOUNT
+		, WRITE_DATE
+		, VIEW_COUNT
+		, RECOMMEND_COUNT
+		, REQUEST_IP
+		, DISPLAY_FILE_NAME
+		)
+		VALUES (
+		COMMUNITY_ID_SEQ.NEXTVAL
+		,
+		#{title}
+		, #{contents}
+		, #{account}
+		, SYSDATE
+		, 0
+		, 0
+		, #{requestIP}
+		,
+		#{displayFilename}
+		)
+	</insert>
+	<update id="incrementViewCount" parameterType="_int">
+		UPDATE COMMUNITY
+		SET VIEW_COUNT = VIEW_COUNT + 1
+		WHERE ID = #{id}
+	</update>
+	<update id="incrementRecommendCount" parameterType="_int">
+		UPDATE
+		COMMUNITY
+		SET RECOMMEND_COUNT = RECOMMEND_COUNT + 1
+		WHERE ID = #{id}
+	</update>
+	<select id="selectOne" parameterType="_int" resultMap="CommunityVOMap">
+		SELECT
+		C.ID
+		, C.TITLE
+		, C.CONTENTS
+		, C.ACCOUNT
+		, TO_CHAR(C.WRITE_DATE,'YYYY-MM-DD
+		HH24:MI:SS') WRITE_DATE
+		, C.VIEW_COUNT
+		, C.RECOMMEND_COUNT
+		, C.REQUEST_IP
+		, C.DISPLAY_FILE_NAME
+		, M.ACCOUNT M_ID
+		, M.EMAIL
+		, M.NICKNAME
+		,
+		M.REGIST_DATE
+		FROM COMMUNITY C
+		, MEMBER M
+		WHERE C.ACCOUNT = M.ACCOUNT(+)
+		AND C.ID = #{id}
+	</select>
+	<delete id="deleteOne" parameterType="_int">
+		DELETE
+		FROM COMMUNITY
+		WHERE
+		ID = #{id}
+	</delete>
+
+
+	<delete id="deleteMyCommunities" parameterType="_int">
+		DELETE
+		FROM
+		COMMUNITY
+		WHERE ACCOUNT = #{account}
+	</delete>
+
+	<update id="updateCommunity" parameterType="CommunityVo">
+
+		UPDATE COMMUNITY
+		SET WRITE_DATE = SYSDATE
+		<if test="requestIP != null and requestIP != ''">
+			, REQUEST_IP = #{requestIP}
+		</if>
+		<if test="title != null and title != ''">
+			, TITLE = #{title}
+		</if>
+		<if test="contents != null and contents != ''">
+			, CONTENTS = #{contents}
+		</if>
+		, DISPLAY_FILE_NAME = #{displayFilename}
+		WHERE ID = #{id}
+		AND ACCOUNT =
+		#{account}
+	</update>
+
+	<select id="selectMyCommunitiesCount" resultType="_int"
+		parameterType="_int">
+		SELECT COUNT(ID)
+		FROM COMMUNITY
+		WHERE ACCOUNT = #{account}
+	</select>
+
+	<select id="selectMyCommunities" resultMap="CommunityVOMap"
+		parameterType="_int">
+			SELECT
+					C.ID
+					, C.TITLE
+					, C.CONTENTS
+					, C.ACCOUNT
+					, TO_CHAR(C.WRITE_DATE,'YYYY-MM-DD
+					HH24:MI:SS') WRITE_DATE
+					, C.VIEW_COUNT
+					, C.RECOMMEND_COUNT
+					, C.REQUEST_IP
+					, C.DISPLAY_FILE_NAME
+					, M.ACCOUNT M_ID
+					, M.EMAIL
+					, M.NICKNAME
+					,
+					M.REGIST_DATE
+					FROM COMMUNITY C
+					, MEMBER M
+					WHERE C.ACCOUNT = M.ACCOUNT
+					AND C.ACCOUNT = #{account}
+	</select>
+	
+	<delete id="deleteCommunities" parameterType="Map">
+			DELETE
+			FROM COMMUNITY
+			WHERE ACCOUNT = ${account}
+			AND ID IN
+			<foreach collection="ids" item="id" open="(" close=")" separator=", ">
+				#{id}
+			</foreach>
+	</delete>
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	
+	<!-- 디비로!! -->
+	<bean id="communityDaoOracle" class="com.ktds.community.dao.CommunityDaoImplForOracle">
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate"/>
+	</bean>
+	
+	
+	<bean id="communityService" class="com.ktds.community.service.CommunityServiceImpl">
+		<property name="communityDao" ref="communityDaoOracle" />
+	</bean>
+	<!-- setter를 호출 하기 때문에 property 로 받아오기 -->
+	<!-- ref 는 위에 있는 빈 아이디 -->	
+</beans>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	<!-- 디비연결 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" />
+		<property name="url" value="jdbc:oracle:thin:@localhost:1521:XE" />
+		<property name="username" value="COMMUNITY" />
+		<property name="password" value="community" />
+	</bean>
+	
+	
+	<!-- MyBatis 설정 -->
+	<!-- MyBatis가 DB에 접속할 수 있도록 도와주는 설정 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:/mybatis/mybatis.xml"></property>
+	</bean>
+	<!-- MyBatis가 DB에 Query(SQL)를 실행하고, 결과를 받아오게 도와주는 설정 -->
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<!-- 얘네는 생성자가 필요함 :: 생성자의 파라미터 값을 넣어주는 설정이 필요함 -->
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<!-- Transaction( Commit:반영, Rollback:원상복구 ) 설정 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- Rollback 규칙 설정 -->
+	<tx:advice id="rollbackRule" transaction-manager="transactionManager">
+		<tx:attributes>
+			<!-- ~~~* : ~~~로 시작하는 모든 메소드들에게 -->
+			<tx:method name="create*" rollback-for="RuntimeException" />
+			<tx:method name="read*" rollback-for="RuntimeException" />
+			<tx:method name="update*" rollback-for="RuntimeException" />
+			<tx:method name="delete*" rollback-for="RuntimeException" />
+			<tx:method name="increment*" rollback-for="RuntimeException" />
+		</tx:attributes>
+	</tx:advice>
+	<!-- Transaction 대상 설정 -->
+	<!-- 관점지향프로그래밍: 프로그램 실행 중 어떤상황이 닥쳤을 때 지가 알아서 실행되게 함 -->
+	<aop:config>
+		<!-- expression : 누구한테 롤백 룰을 설정할 건지 -->
+		<!-- "execution(public *)" \
+		: 퍼블릭으로 시작하고 모든 리턴타입 
+		com.ktds..service.*ServiceImpl.*(..))
+		: -->
+		<aop:pointcut expression="execution(public * com.ktds..service.*ServiceImpl.*(..))" id="pointCut"/>
+		<aop:advisor advice-ref="rollbackRule" pointcut-ref="pointCut"/>
+	</aop:config>
+</beans>
